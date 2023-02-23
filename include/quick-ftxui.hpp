@@ -34,6 +34,8 @@ struct input;
 
 enum block_alignment { VERTICAL, HORIZONTAL };
 
+enum color_component { Red, Yellow};
+
 typedef boost::variant<nil, boost::recursive_wrapper<button>,
                        boost::recursive_wrapper<input>,
                        boost::recursive_wrapper<expression>>
@@ -52,6 +54,7 @@ struct input {
 
 struct expression {
     block_alignment align;
+    color_component color;
     std::list<node> expr;
 };
 
@@ -91,6 +94,7 @@ BOOST_FUSION_ADAPT_STRUCT(client::quick_ftxui_ast::input,
 
 BOOST_FUSION_ADAPT_STRUCT(client::quick_ftxui_ast::expression,
                           (client::quick_ftxui_ast::block_alignment, align)
+                          (client::quick_ftxui_ast::color_component, color)
                           (std::list<client::quick_ftxui_ast::node>, expr)
 )
 
@@ -230,6 +234,12 @@ struct parser
           ("Vertical", quick_ftxui_ast::block_alignment::VERTICAL)
           ("Horizontal", quick_ftxui_ast::block_alignment::HORIZONTAL)
           ;
+
+        color_kw
+         .add
+         ("Red", quick_ftxui_ast::color_component::Red)
+         ("Yellow", quick_ftxui_ast::color_component::Yellow)
+         ;
         // clang-format on
 
         quoted_string %= qi::lexeme['"' >> +(char_ - '"') >> '"'];
@@ -242,7 +252,7 @@ struct parser
 
         node = button_comp | input_comp | expression;
 
-        expression = alignment_kw >> '{' >> *node >> '}';
+        expression =  color_kw >> alignment_kw >> '{' >> *node >> '}';
 
         // Debugging and error handling and reporting support.
         BOOST_SPIRIT_DEBUG_NODES((button_comp)(expression));
@@ -258,6 +268,7 @@ struct parser
     qi::rule<Iterator, quick_ftxui_ast::input(), ascii::space_type> input_comp;
     qi::rule<Iterator, std::string(), ascii::space_type> quoted_string;
     qi::symbols<char, quick_ftxui_ast::block_alignment> alignment_kw;
+    qi::symbols<char, quick_ftxui_ast::color_component> color_kw;
 };
 } // namespace quick_ftxui_parser
 

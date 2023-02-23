@@ -1,0 +1,12 @@
+Red Vertical{
+Button{
+        "Button2",
+        "Exit"
+    }
+Yellow Vertical{
+Button{
+        "Button2",
+        "Exit"
+    }
+}
+}

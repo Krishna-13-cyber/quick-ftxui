@@ -9,7 +9,7 @@ int main(int argc, char **argv) {
     typedef std::string::const_iterator iterator_type;
     typedef client::quick_ftxui_parser::parser<iterator_type> parser;
     typedef client::quick_ftxui_ast::expression expression_type;
-
+    int v,h;
     char const *filename;
     if (argc > 1) {
         filename = argv[1];
@@ -47,26 +47,47 @@ int main(int argc, char **argv) {
         client::quick_ftxui_parser::ast_printer printer(&data, 0);
         printer(expression);
         if (data.components.size()) {
-            switch (expression.align) {
-            case client::quick_ftxui_ast::block_alignment::HORIZONTAL: {
+            switch (expression.color) {
+            case client::quick_ftxui_ast::color_component::Red: {
+                if (client::quick_ftxui_ast::block_alignment::HORIZONTAL == expression.align) {
                 auto component =
                     ftxui::Container::Horizontal(std::move(data.components));
                 auto main_renderer = ftxui::Renderer(component, [&] {
-                    return ftxui::vbox({component->Render()});
+                    return ftxui::vbox({component->Render() | ftxui::bold | ftxui::color(ftxui::Color:: Red)});
                 });
                 screen.Loop(main_renderer);
-                break;
-            }
-            case client::quick_ftxui_ast::block_alignment::VERTICAL: {
+                }
+                else
+                {
                 auto component =
                     ftxui::Container::Vertical(std::move(data.components));
                 auto main_renderer = ftxui::Renderer(component, [&] {
-                    return ftxui::vbox({component->Render()});
+                    return ftxui::vbox({component->Render() | ftxui::bold | ftxui::color(ftxui::Color::Red)});
+                });
+                screen.Loop(main_renderer);                    
+                }
+                break;            
+            }
+            case client::quick_ftxui_ast::color_component::Yellow: {
+                if (client::quick_ftxui_ast::block_alignment::HORIZONTAL == expression.align) {
+                auto component =
+                    ftxui::Container::Horizontal(std::move(data.components));
+                auto main_renderer = ftxui::Renderer(component, [&] {
+                    return ftxui::vbox({component->Render() | ftxui::bold | ftxui::color(ftxui::Color:: Yellow)});
                 });
                 screen.Loop(main_renderer);
-                break;
-            }
-            }
+                }
+                else
+                {
+                auto component =
+                    ftxui::Container::Vertical(std::move(data.components));
+                auto main_renderer = ftxui::Renderer(component, [&] {
+                    return ftxui::vbox({component->Render() | ftxui::bold | ftxui::color(ftxui::Color::Yellow)});
+                });
+                screen.Loop(main_renderer);                    
+                }
+                break;           
+            }          
         }
     } else {
         std::cout << "-------------------------\n";
@@ -74,4 +95,5 @@ int main(int argc, char **argv) {
         std::cout << "-------------------------\n";
     }
     return 0;
+}
 }
