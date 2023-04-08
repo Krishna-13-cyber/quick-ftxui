@@ -47,6 +47,10 @@ TEST_CASE("Parse Simple") {
     REQUIRE(!parse_helper("Horizontal_{_Button{\"amool\",\"bmpp\"}_}"));
     REQUIRE(!parse_helper("\"amool\"{Button{\"amool,\"bmpp\"}}"));
     REQUIRE(!parse_helper("Vertical{Button{\"amool\" . \"bmpp\"}}"));
+    REQUIRE(!parse_helper(
+        "Vertical{Dropdown{\"amool\"  \"bmpp\" \"abcd\" \"hello\"}, 0}"));
+    REQUIRE(!parse_helper(
+        "Horizontal{Dropdown{\"amool\"  \"bmpp\" \"abcd\" \"hello\"}, 1}"));
 }
 
 TEST_CASE("Parse Complex") {
