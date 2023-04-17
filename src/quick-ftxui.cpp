@@ -5,6 +5,7 @@
 #include <fstream>
 #include <iostream>
 
+extern int k;
 int main(int argc, char **argv) {
     typedef std::string::const_iterator iterator_type;
     typedef client::quick_ftxui_parser::parser<iterator_type> parser;
@@ -67,6 +68,15 @@ int main(int argc, char **argv) {
                 break;
             }
             }
+        }
+        if ( data.elements) // ??
+        {
+                auto document = ftxui::hbox({
+                ftxui::text("downloading:"),
+                ftxui::gauge(100) | ftxui::flex,
+                });
+        ftxui::Render(screen,document);
+        screen.Print();
         }
     } else {
         std::cout << "-------------------------\n";

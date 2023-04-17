@@ -19,6 +19,7 @@
 #include <iostream>
 #include <string>
 
+int k = 0;
 namespace client {
 namespace qi = boost::spirit::qi;
 namespace ascii = boost::spirit::ascii;
@@ -33,6 +34,7 @@ struct expression;
 struct input;
 struct slider;
 struct menu;
+struct gauge;
 
 enum block_alignment { VERTICAL, HORIZONTAL };
 
@@ -64,6 +66,10 @@ struct slider {
 struct menu {
     std::vector<std::string> entries;
     int selected = 0;
+};
+
+struct gauge{
+    float percentage;
 };
 
 struct expression {
@@ -125,6 +131,10 @@ BOOST_FUSION_ADAPT_STRUCT(client::quick_ftxui_ast::menu,
                           (int, selected)
 )
 
+BOOST_FUSION_ADAPT_STRUCT(client::quick_ftxui_ast::gauge,
+                          (float, percentage)
+)
+
 BOOST_FUSION_ADAPT_STRUCT(client::quick_ftxui_ast::expression,
                           (client::quick_ftxui_ast::block_alignment, align)
                           (std::list<client::quick_ftxui_ast::node>, expr)
@@ -149,6 +159,7 @@ void tab(int indent) {
 struct component_meta_data {
     ftxui::ScreenInteractive *screen;
     ftxui::Components components;
+    ftxui::Elements elements;
 };
 
 struct ast_printer {
@@ -214,6 +225,13 @@ struct node_printer : boost::static_visitor<> {
         tab(indent + tabsize);
         data->components.push_back(
             ftxui::Menu(&text.entries, (int *)&text.selected));
+    }
+
+    void operator()(quick_ftxui_ast::gauge const &text) const {
+        tab(indent + tabsize);
+        data->elements.push_back(
+            ftxui::gauge(text.percentage));
+            k =1;
     }
 
     void operator()(quick_ftxui_ast::nil const &text) const {
@@ -297,7 +315,9 @@ struct parser
         menu_comp %= qi::lit("Menu") >> '{' >> '[' >> *quoted_string >> ']' >>
                      ',' >> qi::int_ >> '}';
 
-        node = button_comp | input_comp | slider_comp | menu_comp | expression;
+        gauge %= qi::lit("Gauge") >> '{' >>  qi::float_ >> '}';
+
+        node = button_comp | input_comp | slider_comp | menu_comp | gauge | expression;
 
         expression = alignment_kw >> '{' >> *node >> '}';
 
@@ -317,6 +337,7 @@ struct parser
     qi::rule<Iterator, std::string(), ascii::space_type> quoted_string;
     qi::rule<Iterator, quick_ftxui_ast::slider(), ascii::space_type>
         slider_comp;
+    qi::rule<Iterator, quick_ftxui_ast::gauge(), ascii::space_type> gauge;        
     qi::symbols<char, quick_ftxui_ast::block_alignment> alignment_kw;
 };
 } // namespace quick_ftxui_parser
