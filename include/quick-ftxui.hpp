@@ -6,6 +6,8 @@
 #include <boost/spirit/include/qi.hpp>
 #include <boost/variant/apply_visitor.hpp>
 #include <boost/variant/recursive_variant.hpp>
+#include <boost/assign/list_of.hpp>
+#include <boost/unordered_map.hpp>
 
 #include "ftxui/component/component.hpp"      // for Input, Renderer, Vertical
 #include "ftxui/component/component_base.hpp" // for ComponentBase
@@ -43,6 +45,7 @@ typedef boost::variant<
     node;
 
 struct button {
+    std::string color;
     std::string placeholder;
     std::string func;
 };
@@ -54,6 +57,7 @@ struct input {
 };
 
 struct slider {
+    std::string color;
     std::string label;
     int value;
     int min;
@@ -62,6 +66,7 @@ struct slider {
 };
 
 struct menu {
+    std::string color;
     std::vector<std::string> entries;
     int selected = 0;
 };
@@ -102,6 +107,7 @@ inline std::ostream &operator<<(std::ostream &out, slider b) {
 
 // clang-format off
 BOOST_FUSION_ADAPT_STRUCT(client::quick_ftxui_ast::button,
+                          (std::string, color)
                           (std::string, placeholder)
                           (std::string, func)
 )
@@ -113,6 +119,7 @@ BOOST_FUSION_ADAPT_STRUCT(client::quick_ftxui_ast::input,
 )
 
 BOOST_FUSION_ADAPT_STRUCT(client::quick_ftxui_ast::slider,
+                          (std::string, color)
                           (std::string, label)
                           (int, value)
                           (int, min)
@@ -121,6 +128,7 @@ BOOST_FUSION_ADAPT_STRUCT(client::quick_ftxui_ast::slider,
 )
 
 BOOST_FUSION_ADAPT_STRUCT(client::quick_ftxui_ast::menu,
+                          (std::string, color)
                           (std::vector<std::string>, entries)
                           (int, selected)
 )
@@ -138,6 +146,7 @@ namespace ascii = boost::spirit::ascii;
 
 namespace quick_ftxui_parser {
 using boost::phoenix::function;
+using boost::assign::map_list_of;
 
 int const tabsize = 4;
 
@@ -187,22 +196,41 @@ struct node_printer : boost::static_visitor<> {
             break;
         }
     }
+    const boost::unordered_map<ftxui::Color::Palette16,const char*> ToString = map_list_of
+    (ftxui::Color::Red, "Red")
+    (ftxui::Color::Blue, "Blue")
+    (ftxui::Color::Yellow, "Yellow")
+    (ftxui::Color::Magenta, "Magenta")
+    (ftxui::Color::White, "White")
+    (ftxui::Color::Green, "Green");
 
     void operator()(quick_ftxui_ast::button const &text) const {
         tab(indent + tabsize);
         std::cout << "button: " << text << std::endl;
         if (text.func == "Exit") {
-            data->components.push_back(ftxui::Button(
-                text.placeholder, data->screen->ExitLoopClosure()));
+            for (auto i : ToString)
+            {
+                if (i.second == (text.color))
+                {
+                    data->components.push_back(ftxui::Button(
+                    text.placeholder, data->screen->ExitLoopClosure()) | ftxui::color(i.first));
+                }
+            }
         }
     }
 
     void operator()(quick_ftxui_ast::slider const &text) const {
         tab(indent + tabsize);
         std::cout << "slider" << text << std::endl;
-        data->components.push_back(ftxui::Slider(text.label,
+        for (auto i : ToString)
+            {
+                if (i.second == (text.color))
+                {
+                    data->components.push_back(ftxui::Slider(text.label,
                                                  (int *)(&text.value), text.min,
-                                                 text.max, text.increment));
+                                                 text.max, text.increment)| ftxui::color(i.first));
+                }
+    }
     }
 
     void operator()(quick_ftxui_ast::input const &text) const {
@@ -212,8 +240,14 @@ struct node_printer : boost::static_visitor<> {
 
     void operator()(quick_ftxui_ast::menu const &text) const {
         tab(indent + tabsize);
-        data->components.push_back(
-            ftxui::Menu(&text.entries, (int *)&text.selected));
+        for (auto i : ToString)
+            {
+                if (i.second == (text.color))
+                {        
+                    data->components.push_back(
+                        ftxui::Menu(&text.entries, (int *)&text.selected) | ftxui::color(i.first));
+                }
+    }
     }
 
     void operator()(quick_ftxui_ast::nil const &text) const {
@@ -284,17 +318,17 @@ struct parser
 
         quoted_string %= qi::lexeme['"' >> +(char_ - '"') >> '"'];
 
-        button_comp %= qi::lit("Button") >> '{' >> quoted_string >> ',' >>
+        button_comp %= qi::lit("Button") >> quoted_string >> '{' >> quoted_string >> ',' >>
                        quoted_string >> '}';
 
         input_comp %= qi::lit("Input") >> '{' >> quoted_string >> ',' >>
                       quoted_string >> ',' >> quoted_string >> '}';
 
-        slider_comp %= qi::lit("Slider") >> '{' >> quoted_string >> ',' >>
+        slider_comp %= qi::lit("Slider") >> quoted_string >>'{' >> quoted_string >> ',' >>
                        qi::int_ >> ',' >> qi::int_ >> ',' >> qi::int_ >> ',' >>
                        qi::int_ >> '}';
 
-        menu_comp %= qi::lit("Menu") >> '{' >> '[' >> *quoted_string >> ']' >>
+        menu_comp %= qi::lit("Menu") >> quoted_string >> '{' >> '[' >> *quoted_string >> ']' >>
                      ',' >> qi::int_ >> '}';
 
         node = button_comp | input_comp | slider_comp | menu_comp | expression;

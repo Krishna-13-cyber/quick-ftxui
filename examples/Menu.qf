@@ -1,10 +1,10 @@
 Vertical
 {
-    Menu{
+    Menu "Red"{
         [ "Physics"  "Maths"  "Chemistry"  "Biology"],
         0
     }
-    Button{
+    Button "Yellow"{
         "Button2",
         "Exit"
     }

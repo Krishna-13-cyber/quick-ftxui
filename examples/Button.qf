@@ -1,18 +1,28 @@
 Vertical{
-    Button{
+    Button "Red"{
         "Button1",
         "Exit"
     }
-    Button{
+    Button "Blue"{
         "Button2",
         "Exit"
     }
     Horizontal{
-        Button{
+        Button "Magenta"{
             "Button3",
             "Exit"
         }
-        Button{
+        Button "Green"{
+            "Button4",
+            "Exit"
+        }
+    }
+    Horizontal{
+        Button "Yellow"{
+            "Button3",
+            "Exit"
+        }
+        Button "White"{
             "Button4",
             "Exit"
         }
